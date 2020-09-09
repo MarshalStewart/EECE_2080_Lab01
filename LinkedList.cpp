@@ -8,8 +8,6 @@
 #include <iomanip>
 #include <sstream>
 
-#define yeet return
-
 using namespace std;
 
 ILinkedList::ILinkedList() : m_count(0)
@@ -19,6 +17,7 @@ ILinkedList::ILinkedList() : m_count(0)
 Node::Node() : m_value(-1), m_next(nullptr)
 {
 }
+
 Node::Node(int val) : m_value(val), m_next(nullptr)
 {
 }
@@ -46,9 +45,8 @@ Node::~Node()
 	// TODO(DONE) - hint, you can recursively handle this
 	std::cout << "Deleting node with value " << m_value << std::endl;
 	if (m_next != nullptr)
-	{
 		delete m_next;
-	}
+	m_next = nullptr;
 }
 
 PointerBasedLinkedList::PointerBasedLinkedList() : ILinkedList(), m_head(nullptr)
@@ -59,32 +57,35 @@ PointerBasedLinkedList::PointerBasedLinkedList() : ILinkedList(), m_head(nullptr
 bool PointerBasedLinkedList::isEmpty() const
 {
 	// TODO (DONE)
-	yeet (m_head == nullptr);
+	return (m_head == nullptr);
 }
 
 /** Adds a value to the LinkedList.  Return true if able to, otherwise false */
 bool PointerBasedLinkedList::add(int val)
 {
-	if (m_head == nullptr)
-		return false;
-
 	// TODO (DONE)
-	if (m_count >= 10)
+	if (m_count > 10)
 	{
-		yeet false;
+		return false;
 	}
 
 	Node *curPtr = m_head;
+	Node *tmp = new Node(val, nullptr);
 
-	// get last
-	while (curPtr->getNext() != nullptr)
+	if (isEmpty())
+		m_head = tmp;
+	else
 	{
-		curPtr = curPtr->getNext();
+		Node *nxtPtr = curPtr->getNext();
+		while (nxtPtr != nullptr)
+		{
+			curPtr = nxtPtr;
+			nxtPtr = nxtPtr->getNext();
+		}
+
+		curPtr->setNext(tmp);
 	}
 
-	// Append to last node
-	Node *temp = new Node(val, nullptr);
-	curPtr->setNext(temp);
 	m_count++;
 
 	return true;
@@ -94,66 +95,95 @@ bool PointerBasedLinkedList::add(int val)
 Will only remove one entry if there are multiple entries with the same value */
 bool PointerBasedLinkedList::remove(int val)
 {
-	if (m_head == nullptr)
-		return false;
-
 	// TODO (DONE)
-	Node *prePtr = m_head;
-	Node *curPtr = m_head->getNext();
+	bool canRemove = !isEmpty();
+	bool foundItem = false;
+	Node *curPtr = m_head;
+	Node *prePtr = nullptr;
+	Node *nxtPtr = nullptr;
 
-	while (curPtr != nullptr)
+	while (curPtr != nullptr && canRemove)
 	{
-		if (curPtr->getItem() == val && curPtr != m_head)
+		if (curPtr->getItem() == val)
 		{
-			prePtr->setNext(curPtr->getNext());
+			foundItem = true;
+			nxtPtr = curPtr->getNext();
+			if (prePtr == nullptr)
+				m_head = nxtPtr;
+			else
+				prePtr->setNext(nxtPtr);
+
 			curPtr->setNext(nullptr);
 			delete curPtr;
 			m_count--;
-			return true;
 		}
 		prePtr = curPtr;
 		curPtr = curPtr->getNext();
 	}
-	return false;
+	return (canRemove && foundItem);
 }
 
 /** Remove all elements from LinkedList */
 void PointerBasedLinkedList::clear()
 {
 	// TODO (DONE)
-	if (m_head != nullptr){
-		delete m_head->getNext();
-		m_head->setNext(nullptr);
+	Node *curPtr = m_head;
+	Node *prvPtr = nullptr;
+
+	while (curPtr != nullptr)
+	{
+		while(curPtr->getNext() != nullptr)
+		{
+			prvPtr = curPtr;
+			curPtr = curPtr->getNext();
+		}	
+
+		if (curPtr == m_head)
+		{
+			m_head->setNext(nullptr);
+			delete m_head;
+			m_head = nullptr;
+		}
+		else
+		{
+			curPtr->setNext(nullptr);
+			delete curPtr;
+
+			prvPtr->setNext(nullptr);
+		}
+
+		curPtr = m_head;
 	}
 }
 
 PointerBasedLinkedList::~PointerBasedLinkedList()
 {
 	// TODO (DONE)
-	if (m_head != nullptr)
-		delete m_head;
+	clear();
 }
 
 std::string PointerBasedLinkedList::toString() const
 {
-	if (m_head == nullptr){
-		return "";
-	}
-
 	// TODO (DONE)
 	string str = "";
 
-	Node *curPtr = m_head->getNext();
+	if (isEmpty())
+	{
+		return str;
+	}
+
+	Node *curPtr = m_head;
 
 	while (curPtr != nullptr)
 	{
-		str += curPtr->getItem();
+		str += std::to_string(curPtr->getItem());
 		curPtr = curPtr->getNext();
 		if (curPtr != nullptr)
 			str += " ";
 	}
 
-	yeet str;
+	std::cout << str << std::endl;
+	return str;
 }
 
 ArrayBasedLinkedList::ArrayBasedLinkedList() : ILinkedList()
@@ -179,7 +209,7 @@ bool ArrayBasedLinkedList::add(int val)
 	{
 		if (m_values[i] == -1)
 		{
-			m_values[i] == val;
+			m_values[i] = val;
 			m_count++;
 			return true;
 		}
@@ -196,22 +226,23 @@ bool ArrayBasedLinkedList::remove(int val)
 		if (m_values[i] == val && !removed)
 		{
 			removed = true;
+			m_count--;
 		}
 		if (removed)
 		{
-			m_values[i] = (i == 9) ? -1 : m_values[i];
+			m_values[i] = (i == 9) ? -1 : m_values[i+1];
 		}
 	}
-	if(removed){
-		m_count--;
-	}
+
 	return removed;
 }
 void ArrayBasedLinkedList::clear()
 {
 	// TODO (DONE)
-	for (int i : m_values)
-		i = -1; // SHOWDOWN TEST IT TEST IT TEST IT TEST IT
+	for (int i: m_values)
+		i = -1;
+
+	m_count = 0;
 }
 
 ArrayBasedLinkedList::~ArrayBasedLinkedList()
@@ -225,12 +256,14 @@ std::string ArrayBasedLinkedList::toString() const
 	// TODO
 	for (int i = 0; i < 10; i++)
 	{
-		str += m_values[i];
-		if (i < 9)
+		if(m_values[i] >= 0)
+			str += std::to_string(m_values[i]);
+
+		if (i < 10 && m_values[i] >= 0)
 		{
 			str += " ";
 		}
 	}
 
-	return str;
+	return str.substr(0, str.length()-1);
 }

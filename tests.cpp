@@ -208,7 +208,6 @@
 			ASSERT_TRUE(linkedList.add(1));
 
 			ASSERT_FALSE(linkedList.isEmpty());
-
 			ASSERT_EQ(std::string("1"), linkedList.toString());
 
 			linkedList.clear();
